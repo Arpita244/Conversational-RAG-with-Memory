@@ -2,19 +2,19 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+
 import chatRoutes from "./routes/chatRoutes.js";
+import ingestRoutes from "./routes/ingestRoutes.js";
 
 dotenv.config();
 const app = express();
 
-// CORS (allow CRA dev server)
 app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
-// Routes
 app.use("/api/chat", chatRoutes);
+app.use("/api/ingest", ingestRoutes);
 
-// MongoDB
 mongoose
   .connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
   .then(() => {

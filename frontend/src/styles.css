@@ -1,0 +1,39 @@
+:root {
+  --bg: #0f172a;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #3b82f6;
+  --accent-2:#10b981;
+}
+body { margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#f8fafc,#eef2ff); color:#0f172a; }
+.container { max-width: 980px; margin: 20px auto; padding: 0 16px; }
+.site-header { background: white; box-shadow: 0 1px 8px rgba(2,6,23,0.06); padding:14px 0; }
+.site-header .container { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.site-header h1 { margin:0; font-size:20px; color:var(--bg); }
+.site-header nav button { margin-left:8px; padding:8px 12px; border-radius:8px; border:1px solid transparent; background:transparent; cursor:pointer; }
+.site-header nav button.active { background:var(--accent); color:white; border-color:transparent; box-shadow:0 3px 10px rgba(59,130,246,0.12); }
+
+.site-footer { padding:14px 0; margin-top:24px; text-align:center; color:var(--muted); }
+
+.card, .chat-card { background: white; border-radius:12px; padding:16px; box-shadow: 0 6px 18px rgba(2,6,23,0.06); margin-top:16px; }
+.chat-card { display:flex; flex-direction:column; gap:12px; }
+
+.chat-header { display:flex; justify-content:space-between; align-items:center; }
+.chat-header h3 { margin:0; }
+.chat-body { height:420px; overflow:auto; padding:8px; border-radius:8px; background: #f7fafc; border: 1px solid #eef2ff; }
+.chat-row { margin-bottom:12px; display:flex; flex-direction:column; gap:6px; }
+.chat-row.user { align-items:flex-end; }
+.bubble { padding:10px 12px; border-radius:12px; background:white; border:1px solid #e6eefc; max-width:78%; white-space:pre-wrap; position:relative; }
+.chat-row.user .bubble { background:#dbeafe; border-color:#bfdbfe; }
+.meta-block { font-size:13px; color:var(--muted); margin-left:6px; display:flex; flex-direction:column; gap:6px; }
+.chat-input { display:flex; gap:8px; margin-top:6px; }
+.chat-input input { flex:1; padding:10px; border-radius:10px; border:1px solid #e6eefc; }
+.chat-input button { padding:10px 16px; border-radius:10px; background:var(--accent); color:white; border:none; cursor:pointer; }
+
+.card input, .card textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #e6eefc; }
+.card button { padding:10px 14px; border-radius:8px; background:var(--accent-2); color:white; border:none; cursor:pointer; margin-top:8px; }
+
+.badge { background:#d1fae5; color:#065f46; font-size:11px; padding:2px 6px; border-radius:8px; margin-left:8px; }
+.typing { font-style:italic; color:var(--muted); padding:8px; }
+.meta { color:var(--muted); font-size:13px; }
+.sources span, .memories span { margin-right:6px; display:inline-block; background:#f1f5f9; padding:4px 8px; border-radius:6px; }

@@ -1,107 +1,123 @@
+// frontend/src/components/ChatUI.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { sendMessage } from "../api/chatApi";
+import { sendMessage, fetchHistory, updateProfile } from "../api";
 import { v4 as uuid } from "uuid";
 
 export default function ChatUI() {
-  const [messages, setMessages] = useState([]); // {role, content, sources?, memories?}
+  const [messages, setMessages] = useState([]); // chat turns
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollerRef = useRef(null);
+  const [username, setUsername] = useState(localStorage.getItem("ns_username") || "");
+  const [showProfilePrompt, setShowProfilePrompt] = useState(!localStorage.getItem("ns_username"));
+  const [displayNameInput, setDisplayNameInput] = useState("");
 
   const [userId] = useState(() => {
     const existing = localStorage.getItem("ns_user_id");
     if (existing) return existing;
-    const id = uuid();
-    localStorage.setItem("ns_user_id", id);
-    return id;
+    const id = uuid(); localStorage.setItem("ns_user_id", id); return id;
   });
+
+  // Load conversation history on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const data = await fetchHistory(userId);
+        if (data?.success) {
+          // map server messages to simple UI messages
+          setMessages(data.messages.map(m => ({ role: m.role, content: m.content })));
+        }
+      } catch (e) {
+        console.warn("history load failed", e.message);
+      }
+    };
+    loadHistory();
+  }, [userId]);
 
   useEffect(() => {
     scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // Save displayName via API and localStorage
+  const handleCreateProfile = async () => {
+    const name = (displayNameInput || "").trim();
+    if (!name) return alert("Please enter a display name");
+    try {
+      await updateProfile(userId, { displayName: name, facts: [] });
+      setUsername(name);
+      localStorage.setItem("ns_username", name);
+      setShowProfilePrompt(false);
+    } catch (err) {
+      console.error("Failed to create profile", err);
+      alert("Could not create profile — try again");
+    }
+  };
+
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || loading) return;
-
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
-    setInput("");
-    setLoading(true);
+    if (!text) return;
+    setMessages(prev => [...prev, { role: "user", content: text }]);
+    setInput(""); setLoading(true);
 
     try {
-      const { reply, sources, memories } = await sendMessage(userId, text);
-      setMessages((prev) => [...prev, { role: "assistant", content: reply, sources, memories }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Network issue—please try again." }]);
+      const data = await sendMessage(userId, text);
+      const { reply, sources, memories, personalizedUsed, personalizedGreeting } = data;
+      // if backend returns personalizedGreeting (it used the displayName), store it
+      if (personalizedGreeting?.name && !username) {
+        setUsername(personalizedGreeting.name);
+        localStorage.setItem("ns_username", personalizedGreeting.name);
+      }
+
+      setMessages(prev => [...prev, { role: "assistant", content: reply, sources, memories, personalizedUsed }]);
+    } catch (err) {
+      console.error("send error", err);
+      setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Network issue — please try again." }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 840, margin: "24px auto", padding: 16 }}>
-      <h2>Conversational RAG with Memory (Gemini)</h2>
+    <div className="chat-card">
+      <div className="chat-header">
+        <h3>Chat</h3>
+        <div className="meta">{username ? `Welcome back, ${username}` : "Welcome — please create a profile"}</div>
+      </div>
 
-      <div
-        ref={scrollerRef}
-        style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12, height: 480, overflowY: "auto", background: "#fafafa" }}
-      >
+      {/* Profile creation modal / block */}
+      {showProfilePrompt && (
+        <div className="card" style={{ marginBottom: 12 }}>
+          <h4>Create your profile</h4>
+          <p>Enter a display name so I can personalize replies for you.</p>
+          <input placeholder="Display name (e.g., Arpita)" value={displayNameInput} onChange={e => setDisplayNameInput(e.target.value)} />
+          <div style={{ marginTop: 8 }}>
+            <button onClick={handleCreateProfile}>Create Profile</button>
+          </div>
+        </div>
+      )}
+
+      <div className="chat-body" ref={scrollerRef}>
         {messages.map((m, i) => (
-          <div key={i} style={{ marginBottom: 10 }}>
-            <div style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-              <div style={{
-                maxWidth: "80%", padding: "8px 12px", borderRadius: 12,
-                whiteSpace: "pre-wrap", background: m.role === "user" ? "#dbeafe" : "white", border: "1px solid #e5e7eb"
-              }}>
-                <strong>{m.role === "user" ? "You" : "Assistant"}: </strong>
-                {m.content}
-              </div>
+          <div key={i} className={`chat-row ${m.role === "user" ? "user" : "assistant"}`}>
+            <div className="bubble">
+              <strong>{m.role === "user" ? "You" : "Assistant"}: </strong>{m.content}
+              {m.personalizedUsed && <span className="badge">personalized</span>}
             </div>
 
-            {m.role === "assistant" && (m.sources?.length > 0 || m.memories?.length > 0) && (
-              <div style={{ marginTop: 6, marginLeft: 6, fontSize: 13, opacity: 0.9 }}>
-                {m.sources?.length > 0 && (
-                  <div>
-                    <em>Sources:</em>{" "}
-                    {m.sources.map((s, idx) => (
-                      <span key={idx} style={{ marginRight: 8 }}>
-                        [{idx + 1}] {s.title}#{s.chunkIndex} (score {s.score})
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {m.memories?.length > 0 && (
-                  <div style={{ marginTop: 4 }}>
-                    <em>Recalled memories:</em>{" "}
-                    {m.memories.slice(0, 3).map((mm, idx) => (
-                      <span key={idx} style={{ marginRight: 8 }}>
-                        {mm.role}: “{mm.content.length > 40 ? mm.content.slice(0, 40) + "…" : mm.content}”
-                      </span>
-                    ))}
-                  </div>
-                )}
+            {m.role === "assistant" && (m.sources?.length || m.memories?.length) && (
+              <div className="meta-block">
+                {m.sources?.length > 0 && <div className="sources">📚 Sources: {m.sources.map((s,ix)=>(<span key={ix}>[{ix+1}] {s.title}#{s.chunkIndex}</span>))}</div>}
+                {m.memories?.length > 0 && <div className="memories">💭 Recalled: {m.memories.slice(0,3).map((mm,ix)=>(<span key={ix}>{mm.role}: “{mm.content.slice(0,40)}”</span>))}</div>}
               </div>
             )}
           </div>
         ))}
-        {loading && <div style={{ opacity: 0.7, fontStyle: "italic" }}>Assistant is typing…</div>}
+        {loading && <div className="typing">Assistant is typing…</div>}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <input
-          style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ddd" }}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Ask something… (try: do you remember what I said earlier?)"
-        />
-        <button
-          onClick={handleSend}
-          disabled={loading}
-          style={{ padding: "10px 16px", borderRadius: 8, border: "1px solid #2563eb", background: loading ? "#93c5fd" : "#3b82f6", color: "white" }}
-        >
-          Send
-        </button>
+      <div className="chat-input">
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSend()} placeholder={showProfilePrompt ? "Create profile first to chat" : "Ask something…"} disabled={showProfilePrompt} />
+        <button onClick={handleSend} disabled={loading || showProfilePrompt}>{loading ? "Sending…" : "Send"}</button>
       </div>
     </div>
   );

@@ -7,6 +7,5 @@ const docChunkSchema = new mongoose.Schema({
   text: { type: String, required: true },
   embedding: { type: [Number], required: true }
 });
-
 docChunkSchema.index({ docId: 1, chunkIndex: 1 }, { unique: true });
 export default mongoose.model("DocChunk", docChunkSchema);

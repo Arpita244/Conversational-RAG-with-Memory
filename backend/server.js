@@ -16,13 +16,18 @@ const app = express();
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl)
+      // Allow requests with no origin (like Postman, curl)
       if (!origin) return callback(null, true);
-      return callback(null, true); // allow all origins
+
+      
+      return callback(null, true);
+
+     
     },
-    credentials: true,
+    credentials: true, // allow cookies
   })
 );
+
 
 app.use(express.json({ limit: "4mb" }));
 app.use(cookieParser());

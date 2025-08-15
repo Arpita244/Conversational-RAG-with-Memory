@@ -12,36 +12,40 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 dotenv.config();
 const app = express();
 
-// ✅ CORS updated so frontend link is not hardcoded
+// ✅ List of allowed origins (no trailing slashes)
+const allowedOrigins = [
+  "http://localhost:3000", // local frontend
+  "https://conversational-rag-with-memory-b-git-c42621-arpita244s-projects.vercel.app", // deployed frontend
+];
+
+// ✅ CORS middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like Postman, curl)
-      if (!origin) return callback(null, true);
-
-      
-      return callback(null, true);
-
-     
+      if (!origin) return callback(null, true); // allow requests like Postman
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
     },
-    credentials: true, // allow cookies
+    credentials: true, // needed if you use cookies
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // allow preflight
+    allowedHeaders: ["Content-Type", "Authorization"], // allow headers in preflight
   })
 );
 
-
+// ✅ Parse JSON and cookies
 app.use(express.json({ limit: "4mb" }));
 app.use(cookieParser());
 
-// health check
+// ✅ Health check
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
-// routes
+// ✅ Routes
 app.use("/api/profile", profileRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/ingest", ingestRoutes);
 app.use("/api/sessions", sessionRoutes);
 
-// db + start
+// ✅ Connect to MongoDB and start server
 mongoose
   .connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
   .then(() => {

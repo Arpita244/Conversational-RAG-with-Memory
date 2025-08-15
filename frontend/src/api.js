@@ -6,7 +6,7 @@ if (API_BASE.endsWith("/")) API_BASE = API_BASE.slice(0, -1);
 
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true, // allow cookies/credentials if you ever use them
+  withCredentials: false, // allow cookies/credentials if you ever use them
 });
 
 // Attach bearer token if present

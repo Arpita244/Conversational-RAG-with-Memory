@@ -15,7 +15,7 @@ const app = express();
 // ✅ List of allowed origins (no trailing slashes)
 const allowedOrigins = [
   "http://localhost:3000", // local frontend
-  "https://conversational-rag-with-memory-b-git-c42621-arpita244s-projects.vercel.app",
+  "https://conversational-rag-with-memory-kv11.vercel.app",
 ];
 
 // ✅ CORS middleware

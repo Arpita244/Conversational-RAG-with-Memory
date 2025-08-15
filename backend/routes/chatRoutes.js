@@ -1,20 +1,13 @@
-import express from "express";
-import { chatWithMemory } from "../controllers/chatController.js";
-import Message from "../models/Message.js";
-const router = express.Router();
+import { Router } from "express";
+import { authRequired } from "../middleware/auth.js";
+import { chatWithMemory, history } from "../controllers/chatController.js";
 
-router.post("/", chatWithMemory);
+const router = Router();
 
-// fetch last N turns as history for frontend
-router.get("/history/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const messages = await Message.find({ userId }).sort({ timestamp: 1 }).lean();
-    res.json({ success: true, messages });
-  } catch (err) {
-    console.error("history err", err);
-    res.status(500).json({ success: false, error: "failed" });
-  }
-});
+// POST - send chat message
+router.post("/", authRequired, chatWithMemory);
+
+// GET - fetch chat history for a session
+router.get("/history/:sessionId", authRequired, history);
 
 export default router;

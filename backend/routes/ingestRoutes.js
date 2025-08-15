@@ -1,5 +1,8 @@
-import express from "express";
+import { Router } from "express";
 import { ingestText } from "../controllers/ingestController.js";
-const router = express.Router();
-router.post("/", ingestText);
+import { authRequired } from "../middleware/auth.js";
+
+const router = Router();
+router.post("/", authRequired, ingestText);
+
 export default router;

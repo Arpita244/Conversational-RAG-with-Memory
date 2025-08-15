@@ -1,9 +1,6 @@
 import { embedWithGemini } from "./geminiClient.js";
 
-// wrapper kept for compatibility
-export const embedText = async (text) => {
-  return embedWithGemini(text);
-};
+export const embedText = async (text) => embedWithGemini(text);
 
 export const cosineSim = (a, b) => {
   let dot = 0, na = 0, nb = 0;

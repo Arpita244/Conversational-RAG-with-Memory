@@ -1,6 +1,12 @@
-import express from "express";
-import { getProfile, updateProfile } from "../controllers/profileController.js";
-const router = express.Router();
-router.get("/:userId", getProfile);
-router.post("/:userId", updateProfile);
+import { Router } from "express";
+import { signup, login, me, logout } from "../controllers/profileController.js";
+import { authRequired } from "../middleware/auth.js";
+
+const router = Router();
+
+router.post("/signup", signup);
+router.post("/login", login);
+router.post("/logout", logout);
+router.get("/me", authRequired, me);
+
 export default router;

@@ -1,14 +1,26 @@
-import { upsertDocument } from "../utils/vectorStore.js";
+import Document from "../models/Document.js";
+import { chunkText } from "../utils/textUtils.js";
+import { embedText } from "../utils/geminiClient.js";
 
-export const ingestText = async (req, res) => {
+export async function ingestText(req, res) {
   try {
     const { title, text } = req.body;
-    if (!title || !text) return res.status(400).json({ error: "title and text required" });
-    const docId = title.toLowerCase().replace(/\s+/g,"-");
-    const count = await upsertDocument({ docId, title, text });
-    res.json({ ok:true, chunks: count, docId, title });
-  } catch (err) {
-    console.error("Ingest error:", err.message);
-    res.status(500).json({ error: "ingest failed", detail: err.message });
+    const userId = req.user.userId;
+
+    if (!title || !text) return res.status(400).json({ error: "title & text required" });
+
+    const chunksRaw = chunkText(text, 900);
+    const chunks = [];
+
+    for (let i = 0; i < chunksRaw.length; i++) {
+      const vec = await embedText(chunksRaw[i]);
+      chunks.push({ text: chunksRaw[i], vector: vec, chunkIndex: i });
+    }
+
+    const doc = await Document.create({ userId, title, chunks });
+    res.json({ ok: true, documentId: doc._id.toString(), chunks: chunks.length });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
   }
-};
+}

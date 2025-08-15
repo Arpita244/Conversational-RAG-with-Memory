@@ -1,4 +1,3 @@
-// frontend/src/components/ChatUI.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { sendMessage, fetchHistory, updateProfile } from "../api";
 import { v4 as uuid } from "uuid";
@@ -18,18 +17,14 @@ export default function ChatUI() {
     const id = uuid(); localStorage.setItem("ns_user_id", id); return id;
   });
 
-  // Load conversation history on mount
   useEffect(() => {
     const loadHistory = async () => {
       try {
         const data = await fetchHistory(userId);
         if (data?.success) {
-          // map server messages to simple UI messages
           setMessages(data.messages.map(m => ({ role: m.role, content: m.content })));
         }
-      } catch (e) {
-        console.warn("history load failed", e.message);
-      }
+      } catch (e) { console.warn("history load failed", e.message); }
     };
     loadHistory();
   }, [userId]);
@@ -38,7 +33,6 @@ export default function ChatUI() {
     scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
-  // Save displayName via API and localStorage
   const handleCreateProfile = async () => {
     const name = (displayNameInput || "").trim();
     if (!name) return alert("Please enter a display name");
@@ -62,12 +56,10 @@ export default function ChatUI() {
     try {
       const data = await sendMessage(userId, text);
       const { reply, sources, memories, personalizedUsed, personalizedGreeting } = data;
-      // if backend returns personalizedGreeting (it used the displayName), store it
       if (personalizedGreeting?.name && !username) {
         setUsername(personalizedGreeting.name);
         localStorage.setItem("ns_username", personalizedGreeting.name);
       }
-
       setMessages(prev => [...prev, { role: "assistant", content: reply, sources, memories, personalizedUsed }]);
     } catch (err) {
       console.error("send error", err);
@@ -84,11 +76,10 @@ export default function ChatUI() {
         <div className="meta">{username ? `Welcome back, ${username}` : "Welcome — please create a profile"}</div>
       </div>
 
-      {/* Profile creation modal / block */}
       {showProfilePrompt && (
-        <div className="card" style={{ marginBottom: 12 }}>
+        <div className="card profile-card">
           <h4>Create your profile</h4>
-          <p>Enter a display name so I can personalize replies for you.</p>
+          <p>Enter a display name so the assistant can personalize replies for you.</p>
           <input placeholder="Display name (e.g., Arpita)" value={displayNameInput} onChange={e => setDisplayNameInput(e.target.value)} />
           <div style={{ marginTop: 8 }}>
             <button onClick={handleCreateProfile}>Create Profile</button>

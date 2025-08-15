@@ -1,18 +1,15 @@
-import UserProfile from "../models/UserProfile.js";
+import UserProfile from "../models/User.js";
 
-/* simple heuristic fact extractor (replace with LLM extractor for better accuracy) */
 export const extractFacts = (text) => {
   const facts = [];
-  const fav = text.match(/my (?:favorite|favourite) (?:color|food|movie|song|language) is ([\w\s]+)/i);
-  if (fav) facts.push({ key: `favorite_${fav[0].split(" ")[2]||"thing"}`, value: fav[1].trim() });
-  const prof = text.match(/\bI(?:'m| am) (a|an)?\s*([A-Za-z ]{2,40})\b/i);
-  if (prof) {
-    const cand = prof[2].trim();
-    if (cand.length <= 40) facts.push({ key: "self_description", value: cand });
-  }
-  const like = text.match(/\bI (?:prefer|like|love|enjoy) ([\w\s]+)/i);
+  const fav = text.match(/my (?:favorite|favourite) ([a-z]+) is ([\w\s-]{2,40})/i);
+  if (fav) facts.push({ key: `favorite_${fav[1].toLowerCase()}`, value: fav[2].trim() });
+  const like = text.match(/\bI (?:prefer|like|love|enjoy) ([\w\s-]{2,40})/i);
   if (like) facts.push({ key: "preference", value: like[1].trim() });
-  return Array.from(new Map(facts.map(f=>[f.key,f])).values());
+  const role = text.match(/\bI(?:'m| am) (?:a|an)?\s*([A-Za-z ]{2,40})\b/i);
+  if (role) facts.push({ key: "self_description", value: role[1].trim() });
+  const map = new Map(); facts.forEach(f => map.set(`${f.key}:${f.value}`, f));
+  return Array.from(map.values());
 };
 
 export const upsertFactsToProfile = async (userId, extractedFacts=[]) => {

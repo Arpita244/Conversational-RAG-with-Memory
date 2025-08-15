@@ -2,26 +2,36 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import chatRoutes from "./routes/chatRoutes.js";
 import ingestRoutes from "./routes/ingestRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
-import maintenanceRoutes from "./routes/maintenanceRoutes.js";
+import sessionRoutes from "./routes/sessionRoutes.js";
 
 dotenv.config();
 const app = express();
-app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
-app.use(express.json({ limit: "2mb" }));
 
+const ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
+app.use(cors({ origin: ORIGIN, credentials: true }));
+app.use(express.json({ limit: "4mb" }));
+app.use(cookieParser());
+
+// health check
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+// routes
+app.use("/api/profile", profileRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/ingest", ingestRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/maintenance", maintenanceRoutes);
+app.use("/api/sessions", sessionRoutes);
 
-const PORT = process.env.PORT || 5000;
-mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
+// db + start
+mongoose
+  .connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
   .then(() => {
     console.log("✅ MongoDB connected");
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    const port = process.env.PORT || 5000;
+    app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
   })
-  .catch(err => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => console.error("❌ MongoDB connection error:", err));

@@ -4,27 +4,30 @@ import { ingestText } from "../api";
 export default function Ingest() {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [res, setRes] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
 
-  const handleIngest = async () => {
+  const submit = async () => {
     if (!title.trim() || !text.trim()) return;
-    setLoading(true);
-    try {
-      const data = await ingestText(title.trim(), text.trim());
-      setRes(data);
-      setTitle(""); setText("");
-    } catch (e) { setRes({ error: true, message: e.message }); }
-    setLoading(false);
+    const res = await ingestText(title.trim(), text.trim());
+    setResult(res);
+    setTitle("");
+    setText("");
   };
 
   return (
-    <div className="card">
-      <h3>Ingest Knowledge</h3>
-      <input placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} />
-      <textarea rows={10} placeholder="Paste text..." value={text} onChange={e=>setText(e.target.value)} />
-      <button onClick={handleIngest} disabled={loading}>{loading? "Ingesting…":"Ingest"}</button>
-      {res && <pre style={{marginTop:12,background:"#f7fafc",padding:10}}>{JSON.stringify(res,null,2)}</pre>}
+    <div className="ingest-wrap">
+      <div className="ingest-card">
+        <h3>Add knowledge (RAG)</h3>
+        <input placeholder="Title (e.g., Course notes)" value={title} onChange={(e)=>setTitle(e.target.value)} />
+        <textarea placeholder="Paste text here…" rows={10} value={text} onChange={(e)=>setText(e.target.value)} />
+        <button className="primary" onClick={submit}>Ingest</button>
+        {result && (
+          <div className="ingest-result">
+            ✅ Ingested {result.chunks} chunks (doc id: {result.documentId})
+          </div>
+        )}
+        <p className="tip">These chunks will be retrieved and cited in your answers.</p>
+      </div>
     </div>
   );
 }

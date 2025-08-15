@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 const metricSchema = new mongoose.Schema({
   userId: String,
+  sessionId: String,
   action: String,
   latencyMs: Number,
   personalizedUsed: { type: Boolean, default: false },

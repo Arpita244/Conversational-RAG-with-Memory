@@ -12,22 +12,21 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 dotenv.config();
 const app = express();
 
-// ✅ List of allowed origins (no trailing slashes)
+// ✅ Allowed origins for frontend
 const allowedOrigins = [
-  "http://localhost:3000",
-  "https://conversational-rag-with-memory-b-git-c42621-arpita244s-projects.vercel.app", 
-  "https://conversational-rag-with-memory-arpita244s-projects.vercel.app" // Add this line
+  "http://localhost:3000", // local frontend
+  "https://conversational-rag-with-memory-b5ag.vercel.app", // deployed frontend
 ];
 
 // ✅ CORS middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow requests like Postman
+      if (!origin) return callback(null, true); // allow Postman or server-side requests
       if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error("Not allowed by CORS"));
     },
-    credentials: true, // needed if you use cookies
+    credentials: true, // allow cookies if needed
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // allow preflight
     allowedHeaders: ["Content-Type", "Authorization"], // allow headers in preflight
   })

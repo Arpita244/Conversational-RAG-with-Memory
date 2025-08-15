@@ -1,22 +1,23 @@
 import axios from "axios";
 
-// Normalize API base URL from .env
+// ✅ Base URL from environment variable
 let API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 if (API_BASE.endsWith("/")) API_BASE = API_BASE.slice(0, -1);
 
+// ✅ Axios instance
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: false, // allow cookies/credentials if you ever use them
+  withCredentials: true, // must match backend credentials
 });
 
-// Attach bearer token if present
+// ✅ Attach bearer token if present
 api.interceptors.request.use((cfg) => {
   const token = localStorage.getItem("ns_token");
   if (token) cfg.headers.Authorization = `Bearer ${token}`;
   return cfg;
 });
 
-// Surface backend error text clearly
+// ✅ Handle backend errors
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -30,13 +31,13 @@ api.interceptors.response.use(
   }
 );
 
-// PROFILE
+// ================= PROFILE =================
 export const createProfile = async (displayName) => {
   const { data } = await api.post("/api/profile/signup", { displayName });
   return data;
 };
 
-// SESSIONS
+// ================= SESSIONS =================
 export const listSessions = async () => {
   const { data } = await api.get("/api/sessions");
   return data;
@@ -57,7 +58,7 @@ export const deleteSession = async (sessionId) => {
   return data;
 };
 
-// MESSAGES
+// ================= MESSAGES =================
 export const getSessionMessages = async (sessionId) => {
   const { data } = await api.get(`/api/sessions/${sessionId}/messages`);
   return data;
@@ -75,7 +76,7 @@ export const sendMessage = async (sessionId, content) => {
   return { ...data, sessionId: sid };
 };
 
-// INGEST
+// ================= INGEST =================
 export const ingestText = async (title, text) => {
   const { data } = await api.post("/api/ingest", { title, text });
   return data;

@@ -8,7 +8,10 @@ export default function AuthGate({ onAuthed }) {
 
   const submit = async (e) => {
     e?.preventDefault();
-    if (!displayName.trim()) { setErr("Please enter a name"); return; }
+    if (!displayName.trim()) {
+      setErr("Please enter a name");
+      return;
+    }
     setLoading(true);
     setErr("");
     try {
@@ -18,9 +21,15 @@ export default function AuthGate({ onAuthed }) {
       localStorage.setItem("ns_username", data.displayName);
       onAuthed({ userId: data.userId, displayName: data.displayName });
     } catch (e) {
-      console.error(e);
-      setErr(e?.response?.data?.error || "Failed to create profile");
-    } finally { setLoading(false); }
+      const msg =
+        e?.response?.data?.error ||
+        e?.response?.data?.message ||
+        e?.message ||
+        "Failed to create profile";
+      setErr(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,11 +37,17 @@ export default function AuthGate({ onAuthed }) {
       <div className="auth-card">
         <h1 className="brand">NerveSpark</h1>
         <h2>Create your profile</h2>
-        <div className="auth-fields">
-          <input placeholder="Display name (unique)" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+        <form onSubmit={submit} className="auth-fields">
+          <input
+            placeholder="Display name (unique)"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
           {err && <div className="error">{err}</div>}
-          <button className="primary" onClick={submit} disabled={loading}>{loading ? "Creating..." : "Start"}</button>
-        </div>
+          <button className="primary" type="submit" disabled={loading}>
+            {loading ? "Creating..." : "Start"}
+          </button>
+        </form>
       </div>
     </div>
   );

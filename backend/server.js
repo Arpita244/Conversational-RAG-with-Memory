@@ -12,8 +12,18 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 dotenv.config();
 const app = express();
 
-const ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
-app.use(cors({ origin: ORIGIN, credentials: true }));
+// ✅ CORS updated so frontend link is not hardcoded
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl)
+      if (!origin) return callback(null, true);
+      return callback(null, true); // allow all origins
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "4mb" }));
 app.use(cookieParser());
 

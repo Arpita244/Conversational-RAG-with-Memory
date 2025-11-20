@@ -8,7 +8,7 @@ if (!GEMINI_KEY) {
   throw new Error("Missing GEMINI_API_KEY in environment variables");
 }
 
-const GENERATE_MODEL = "gemini-1.5-flash-latest";
+const GENERATE_MODEL = "gemini-2.0-flash";
 const EMBED_MODEL = "text-embedding-004"; // Updated to a more recent model
 const GENERATE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GENERATE_MODEL}:generateContent`;
 const EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent`;
